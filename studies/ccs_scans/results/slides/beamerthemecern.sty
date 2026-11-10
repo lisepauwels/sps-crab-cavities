@@ -1,0 +1,102 @@
+% Jerome Belleman <Jerome.Belleman@cern.ch>, March 2015
+
+% The size and position of graphical elements was rigorously computed/measured.
+% That of text not so much as I kept the default Beamer font, so I just
+% overlaid the official template to reach a result that's perceivably close.
+
+% FF Van der Veken <Frederik.Van.der.Veken@cern.ch>, July 2019
+% Added table of contents at new section (with overlay), without slide numbers
+
+\usepackage{appendixnumberbeamer}
+\usepackage{xargs}
+
+\mode<presentation>
+
+\newif\ifbeamer@cern@cover
+\beamer@cern@coverfalse
+\newif\ifbeamer@cern@pagenum
+\beamer@cern@pagenumtrue
+\addtocounter{framenumber}{-1}
+
+\newlength{\titlelf}
+\setlength{\titlelf}{-9pt}
+
+\usefonttheme{cern}
+\usecolortheme{cern}
+\useinnertheme{cern}
+\useoutertheme{cern}
+
+\pgfdeclareimage[width=\paperwidth]{cern-frontcover}{cern-frontcover}
+\pgfdeclareimage[width=\paperwidth]{cern-backcover}{cern-backcover}
+
+\newcommand{\frontcover}{
+  \beamer@cern@covertrue
+  \beamer@cern@pagenumfalse
+  {\usebackgroundtemplate{\pgfuseimage{cern-frontcover}}\frame[noframenumbering]{}}
+  \beamer@cern@coverfalse
+  \beamer@cern@pagenumtrue
+}
+
+\newcommand{\backcover}{
+  \beamer@cern@covertrue
+  \beamer@cern@pagenumfalse
+  {\usebackgroundtemplate{\pgfuseimage{cern-backcover}}\frame[noframenumbering]{}}
+  \beamer@cern@coverfalse
+  \beamer@cern@pagenumtrue
+}
+
+\let\OLDtitlepage\titlepage
+\newcommand{\titlepageT}{
+  \beamer@cern@pagenumfalse
+  \frame{\OLDtitlepage}
+  \beamer@cern@pagenumtrue
+}
+
+\newcommand{\backupslide}[2]{
+  \beamer@cern@pagenumfalse
+  \begin{frame}[noframenumbering]{#1}
+  #2
+  \end{frame}
+  \beamer@cern@pagenumtrue
+}
+
+\newcommand{\backupslides}{
+  \appendix
+  \beamer@cern@pagenumfalse
+  \begin{frame}[noframenumbering]{Backup Slides}
+  \end{frame}
+  \beamer@cern@pagenumtrue
+}
+
+\newcommand{\thanksslide}{
+  \beamer@cern@pagenumfalse
+  \begin{frame}[noframenumbering]{Thank you for your attention!}
+  \end{frame}
+  \beamer@cern@pagenumtrue
+}
+
+\let\OLDsection\section
+\renewcommandx*{\section}[3][2=1,3=Outline]{
+  \OLDsection{#1}
+  \beamer@cern@pagenumfalse
+  \begin{frame}[noframenumbering]{#3}
+  \tableofcontents[currentsection,part=#2]
+  \end{frame}
+  \beamer@cern@pagenumtrue
+}
+
+\let\OLDsubsection\subsection
+\renewcommandx*{\subsection}[3][2=1,3=Outline]{
+  \OLDsubsection{#1}
+  \beamer@cern@pagenumfalse
+  \begin{frame}[noframenumbering]{#3}
+  \tableofcontents[currentsection,part=#2]
+  \end{frame}
+  \beamer@cern@pagenumtrue
+}
+
+\newcommand{\noframenum}{\beamer@cern@pagenumfalse}
+\newcommand{\framenum}{\beamer@cern@pagenumtrue}
+
+\mode
+<all>

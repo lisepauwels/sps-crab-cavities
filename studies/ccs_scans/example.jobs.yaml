@@ -1,0 +1,21 @@
+betatron_lossmaps:
+    - runfile: scripts/blowup.py
+      args:
+        - [data/sps_crab_scan_matched.json]
+        - ['H', 'V']
+        - [-179, -150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150, 179] # Crab cavity phase values
+        - [0, 1] #H or V crab cavities
+        - [0, 1] #Errors off or on
+        - [5, 7.5, 10, 15] #Collimator gap values
+      num_jobs: 1
+
+off_momentum_lossmaps:
+    - runfile: scripts/off-momentum.py
+      args:
+        - [data/sps_crab_scan_matched.json]
+        - [DPpos, DPneg]
+        - [-179, -150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150, 179] # Crab cavity phase values
+        - [0, 1] #H or V crab cavities
+        - [0, 1] #Errors off or on
+        - [5, 7.5, 10, 15] #Collimator gap values
+      num_jobs: 1

@@ -1,0 +1,69 @@
+\PassOptionsToPackage{x11names,svgnames}{xcolor}
+\documentclass[graphics,xcolor=dvipsnames]{beamer}
+
+\input{Commands/PackageList}
+\input{Commands/BeamerSpecific}
+\usepackage[T1]{fontenc}
+\usepackage{gensymb}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{multicol}
+
+\usetikzlibrary{shadows.blur}
+\usetikzlibrary{shapes.symbols}
+\usetikzlibrary{shapes.multipart}
+
+\newcommand{\tfig}[2]{
+	\begin{tikzpicture}
+	\node[anchor=south west,inner sep=0] (image) at (0,0)
+	  {#1};
+	\begin{scope}[x={(image.south east)},y={(image.north west)}]
+	#2
+	\end{scope}
+	\end{tikzpicture}
+}
+
+\title[SPS crab cavity phase scan]{Loss Maps SPS\\Crab Cavity Phase Scan --- Simulations}
+\author{}
+%\institute{CERN}
+
+\date{}
+
+\begin{document}
+
+\frontcover
+
+\frame{\titlepage}
+
+% needed so the cern theme's auto per-section outline frame
+% (\tableofcontents[currentsection,part=1]) has a "part 1" to filter into
+\part{Loss Maps SPS Simulations}
+
+% stable jump target for the "Overview" corner link on every generated frame
+\begin{frame}[label=overview]{Outline}
+\tableofcontents
+\end{frame}
+
+\section{Overview}
+\begin{frame}{Overview}
+\small
+\begin{itemize}
+  \item All loss maps in this deck: \textbf{26~GeV}, TCP/TCSM at \textbf{5$\sigma$}.
+  \item Crab cavities: total voltage \textbf{1~MV}, frequency \textbf{400.787294~MHz}. The kicking
+    plane (Horizontal / Vertical) is the top-level split below.
+  \item Working point $Q_x = 20.13$, $Q_y = 20.18$; chromaticity $\xi_x = 0.405$, $\xi_y = 0.35$;
+    normalised emittances $\epsilon_x = \epsilon_y = 2~\mu$m.
+  \item Two loss-map types: \textbf{Betatron} (single-plane blow-up, excited Horizontally or
+    Vertically) and \textbf{Off-momentum} (RF frequency sweep, DPpos or DPneg).
+  \item Crab cavity phase scanned from $-179^\circ$ to $179^\circ$ in steps of $30^\circ$
+    (13 values), with and without machine errors -- unlike the MD, no ``slow'' loss map was
+    simulated.
+\end{itemize}
+\end{frame}
+\input{generated_settings_table}
+
+\input{generated_slides}
+
+\backcover
+
+\end{document}

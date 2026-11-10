@@ -1,0 +1,260 @@
+#!/usr/bin/env python3
+"""Populate this beamer template from results/plots/{betatron,off_momentum}_lossmaps/*.pdf.
+
+Unlike the MD template this mirrors (nxcalsdata/slides), every simulated case is exactly one
+plot -- no BCT, no per-id repeats, no window/normalisation choice. So the generator here just
+parses the fixed filename patterns produced by results/postprocess.py:
+
+  LM_betatron__{H,V}_phase_{phase}_crab_plane_{H,V}_{wo,with}_errors.pdf
+  LM_off_momentum__{DPpos,DPneg}_phase_{phase}_crab_plane_{H,V}_{wo,with}_errors.pdf
+
+and lays the result out as:
+
+  \\section    = crab cavity kicking plane (Horizontal crabs / Vertical crabs)
+  \\subsection = loss map type (Betatron / Off-momentum)
+  then three manually-built "jump to" nav frames (excitation plane or DPpos/DPneg -> errors ->
+  phase), same hyperlink/hypertarget mechanism as the MD template, ending on one content frame
+  per phase with a single \\includegraphics.
+
+Also (re)generates generated_settings_table.tex: one overview table of the scan dimensions,
+with value lists and counts taken from what's actually on disk.
+
+Usage:
+    python generate_beamer_slides.py
+    python generate_beamer_slides.py --dry-run
+"""
+import argparse
+import re
+from collections import OrderedDict
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+
+CRAB_PLANE_ORDER = ["H", "V"]
+CRAB_PLANE_LABEL = {"H": "Horizontal crabs", "V": "Vertical crabs"}
+
+TYPE_ORDER = ["betatron", "off_momentum"]
+TYPE_LABEL = {"betatron": "Betatron loss maps", "off_momentum": "Off-momentum loss maps"}
+TYPE_DIR = {"betatron": "betatron_lossmaps", "off_momentum": "off_momentum_lossmaps"}
+
+SUBPLANE_ORDER = {"betatron": ["H", "V"], "off_momentum": ["DPpos", "DPneg"]}
+SUBPLANE_LABEL = {"H": "Horizontal", "V": "Vertical", "DPpos": "DPpos", "DPneg": "DPneg"}
+
+ERR_ORDER = ["wo_errors", "with_errors"]
+ERR_LABEL = {"wo_errors": "Without errors", "with_errors": "With errors"}
+
+FILE_RE = {
+    "betatron": re.compile(
+        r"^LM_betatron__(?P<subplane>H|V)_phase_(?P<phase>-?\d+(?:\.\d+)?)"
+        r"_crab_plane_(?P<crabplane>H|V)_(?P<err>with_errors|wo_errors)\.pdf$"
+    ),
+    "off_momentum": re.compile(
+        r"^LM_off_momentum__(?P<subplane>DPpos|DPneg)_phase_(?P<phase>-?\d+(?:\.\d+)?)"
+        r"_crab_plane_(?P<crabplane>H|V)_(?P<err>with_errors|wo_errors)\.pdf$"
+    ),
+}
+
+
+def phase_label(phase):
+    return f"${phase:g}^\\circ$"
+
+
+def slug_phase(phase):
+    n = int(phase) if float(phase).is_integer() else phase
+    return f"m{abs(n)}".replace(".", "p") if n < 0 else f"{n}".replace(".", "p")
+
+
+def slug(*parts):
+    return "_".join(str(p) for p in parts)
+
+
+NAV_CORNER = (
+    "\\begin{tikzpicture}[remember picture,overlay]\n"
+    "\\node[anchor=north east,xshift=-4pt,yshift=-4pt,font=\\scriptsize]"
+    " at (current page.north east)"
+    " {\\hyperlink{overview}{\\color{cern}$\\uparrow$ Overview}};\n"
+    "\\end{tikzpicture}"
+)
+
+
+def discover(plots_dir: Path):
+    """plots/{betatron,off_momentum}_lossmaps/*.pdf -> nested dict:
+    data[crabplane][type][subplane][err] = {phase: relative_path_without_suffix}"""
+    data = {cp: {t: {sp: {} for sp in SUBPLANE_ORDER[t]} for t in TYPE_ORDER} for cp in CRAB_PLANE_ORDER}
+    for lm_type in TYPE_ORDER:
+        d = plots_dir / TYPE_DIR[lm_type]
+        for f in sorted(d.glob("*.pdf")):
+            m = FILE_RE[lm_type].match(f.name)
+            if not m:
+                print(f"  skipping {f.name}: doesn't match expected pattern")
+                continue
+            phase = float(m.group("phase"))
+            crabplane = m.group("crabplane")
+            subplane = m.group("subplane")
+            err = m.group("err")
+            rel = f"../plots/{TYPE_DIR[lm_type]}/{f.stem}"
+            data[crabplane][lm_type][subplane].setdefault(err, {})[phase] = rel
+    return data
+
+
+def build_nav_frame(title, entries, hypertarget=None):
+    multicol = len(entries) > 6
+    lines = [f"\\begin{{frame}}{{{title}}}"]
+    if hypertarget:
+        lines.append(f"\\hypertarget{{{hypertarget}}}{{}}")
+    lines.append("\\framesubtitle{Jump to...}")
+    if multicol:
+        lines.append("\\begin{multicols}{3}")
+    lines.append("\\begin{itemize}")
+    for target, bullet_text in entries:
+        lines.append(f"\\item \\hyperlink{{{target}}}{{{bullet_text}}}")
+    lines.append("\\end{itemize}")
+    if multicol:
+        lines.append("\\end{multicols}")
+    lines.append(NAV_CORNER)
+    lines.append("\\end{frame}")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def build_content_frame(label, title, image_path):
+    lines = [
+        f"\\begin{{frame}}[label={label}]{{{title}}}",
+        "\\firstblock",
+        "\\centering",
+        f"\\includegraphics[width=\\textwidth,height=0.87\\textheight,keepaspectratio]{{{image_path}}}",
+        NAV_CORNER,
+        "\\end{frame}",
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def build_slides_tex(data):
+    lines = ["% AUTO-GENERATED by generate_beamer_slides.py -- do not edit by hand", ""]
+
+    for crabplane in CRAB_PLANE_ORDER:
+        lines.append(f"\\section{{{CRAB_PLANE_LABEL[crabplane]}}}")
+        for lm_type in TYPE_ORDER:
+            type_title = f"{CRAB_PLANE_LABEL[crabplane]} --- {TYPE_LABEL[lm_type]}"
+            lines.append(f"\\subsection{{{TYPE_LABEL[lm_type]}}}")
+
+            subplanes = SUBPLANE_ORDER[lm_type]
+            plane_entries = [
+                (slug(crabplane, lm_type, sp), SUBPLANE_LABEL[sp]) for sp in subplanes
+            ]
+            lines.append(build_nav_frame(type_title, plane_entries))
+
+            for sp in subplanes:
+                plane_title = f"{type_title} --- {SUBPLANE_LABEL[sp]}"
+                plane_target = slug(crabplane, lm_type, sp)
+                err_entries = [
+                    (slug(crabplane, lm_type, sp, err), ERR_LABEL[err]) for err in ERR_ORDER
+                ]
+                lines.append(build_nav_frame(plane_title, err_entries, hypertarget=plane_target))
+
+                for err in ERR_ORDER:
+                    err_title = f"{plane_title} --- {ERR_LABEL[err]}"
+                    err_target = slug(crabplane, lm_type, sp, err)
+                    phases = sorted(data[crabplane][lm_type][sp].get(err, {}))
+                    phase_entries = [
+                        (slug(crabplane, lm_type, sp, err, slug_phase(ph)), phase_label(ph))
+                        for ph in phases
+                    ]
+                    lines.append(build_nav_frame(err_title, phase_entries, hypertarget=err_target))
+
+                    for ph in phases:
+                        image_path = data[crabplane][lm_type][sp][err][ph]
+                        label = slug(crabplane, lm_type, sp, err, slug_phase(ph))
+                        content_title = f"{err_title} --- Phase {phase_label(ph)}"
+                        lines.append(build_content_frame(label, content_title, image_path))
+
+    return "\n".join(lines)
+
+
+def build_settings_table_tex(data):
+    n_phases = len({
+        ph
+        for cp in CRAB_PLANE_ORDER
+        for t in TYPE_ORDER
+        for sp in SUBPLANE_ORDER[t]
+        for err in ERR_ORDER
+        for ph in data[cp][t][sp].get(err, {})
+    })
+    n_total = sum(
+        len(data[cp][t][sp].get(err, {}))
+        for cp in CRAB_PLANE_ORDER
+        for t in TYPE_ORDER
+        for sp in SUBPLANE_ORDER[t]
+        for err in ERR_ORDER
+    )
+
+    lines = ["% AUTO-GENERATED by generate_beamer_slides.py -- do not edit by hand", ""]
+    lines.append("\\begin{frame}{Overview --- scan dimensions}")
+    lines.append("\\centering\\scriptsize")
+    lines.append("\\begin{tabular}{ll}")
+    lines.append("\\toprule")
+    lines.append("Dimension & Values \\\\")
+    lines.append("\\midrule")
+    lines.append(
+        "Crab cavity kicking plane & "
+        + ", ".join(SUBPLANE_LABEL[cp] for cp in CRAB_PLANE_ORDER) + " \\\\"
+    )
+    lines.append(
+        "Loss map type & Betatron, Off-momentum \\\\"
+    )
+    lines.append(
+        "Betatron excitation plane & "
+        + ", ".join(SUBPLANE_LABEL[sp] for sp in SUBPLANE_ORDER["betatron"]) + " \\\\"
+    )
+    lines.append(
+        "Off-momentum sweep sign & "
+        + ", ".join(SUBPLANE_LABEL[sp] for sp in SUBPLANE_ORDER["off_momentum"]) + " \\\\"
+    )
+    lines.append(
+        "Errors & " + ", ".join(ERR_LABEL[e] for e in ERR_ORDER) + " \\\\"
+    )
+    lines.append(
+        f"Crab cavity phase & $-179^\\circ$ to $179^\\circ$ in steps of $30^\\circ$"
+        f" ({n_phases} values) \\\\"
+    )
+    lines.append("\\midrule")
+    lines.append(f"Total loss maps & {n_total} \\\\")
+    lines.append("\\bottomrule")
+    lines.append("\\end{tabular}")
+    lines.append(NAV_CORNER)
+    lines.append("\\end{frame}")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument("--plots-dir", type=Path, default=HERE.parent / "plots")
+    parser.add_argument("--template-dir", type=Path, default=HERE)
+    parser.add_argument("--dry-run", action="store_true")
+    args = parser.parse_args()
+
+    print(f"Discovering plots in {args.plots_dir} ...")
+    data = discover(args.plots_dir)
+
+    slides_tex = build_slides_tex(data)
+    table_tex = build_settings_table_tex(data)
+
+    if args.dry_run:
+        print("\n--- generated_slides.tex (dry-run, not written) ---")
+        print(slides_tex[:3000])
+        print("\n--- generated_settings_table.tex (dry-run, not written) ---")
+        print(table_tex)
+        return
+
+    (args.template_dir / "generated_slides.tex").write_text(slides_tex)
+    (args.template_dir / "generated_settings_table.tex").write_text(table_tex)
+    print(f"Wrote {args.template_dir / 'generated_slides.tex'}")
+    print(f"Wrote {args.template_dir / 'generated_settings_table.tex'}")
+
+
+if __name__ == "__main__":
+    main()

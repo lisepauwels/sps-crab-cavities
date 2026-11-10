@@ -1,0 +1,25 @@
+# macOS
+.DS_Store
+
+# Python / Jupyter
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Large simulation outputs (regenerable, too big for git)
+prototyping/Debugging_LM/20260610/part_coll_*.json
+prototyping/Debugging_LM/20260610/impacts_coll_*.csv
+prototyping/Debugging_LM/results/monitor_*.json
+prototyping/Debugging_LM/results/impacts_*.csv
+prototyping/Debugging_LM/crab_lm_old.ipynb
+
+# LaTeX build artifacts
+studies/ccs_scans/results/slides/*.aux
+studies/ccs_scans/results/slides/*.log
+studies/ccs_scans/results/slides/*.nav
+studies/ccs_scans/results/slides/*.snm
+studies/ccs_scans/results/slides/*.toc
+studies/ccs_scans/results/slides/*.out
+studies/ccs_scans/results/slides/*.synctex.gz
+studies/ccs_scans/results/slides/*.fls
+studies/ccs_scans/results/slides/*.fdb_latexmk

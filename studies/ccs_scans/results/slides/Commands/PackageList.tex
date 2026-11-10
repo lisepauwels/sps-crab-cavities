@@ -1,0 +1,60 @@
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+% 		PROGRAMMING PACKAGES		%
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+\RequirePackage{xifthen}
+\RequirePackage{letltxmacro}	% \let for commands with optional arguments
+\RequirePackage{xkeyval}		% programming: <key> = <value>
+\RequirePackage{xargs}			% programming: better newcommand
+\RequirePackage{xstring}		% programming: provides \IfInteger
+\RequirePackage{environ}		% for \NewEnviron, which parses an environment as a single command (needed to externalize tikz)
+
+
+%%%%%%%%%%%%%%%%%%%
+% 			LAYOUT			%
+%%%%%%%%%%%%%%%%%%%
+\usepackage[latin9]{inputenc}	% latin9 (ISO-8859-9) = latin1+"Euro sign"
+\usepackage[british,dutch]{babel}
+%\usepackage[LGR,T1]{fontenc}	% T2A for cyrillics
+%	\newcommand{\textgreek}[1]{\begingroup \fontencoding{LGR}\selectfont #1\endgroup}% evt met \fontfamily{lmr}
+%\usepackage{textcomp}			% fix warning with missing font shapes
+%\usepackage{hyperref}
+%\usepackage[pdftex]{graphicx} 
+\usepackage{changepage}
+\usepackage{subfig}
+%\usepackage[scr=bickham,scrscaled=1.05]{mathalfa}	% Nice \mathscr
+
+
+
+
+%%%%%%%%%%%%%%%%%%%
+% 			MATH			%
+%%%%%%%%%%%%%%%%%%%
+
+%\usepackage[fleqn]{amsmath}
+\usepackage{cancel}
+\usepackage{slashed}				% Feynman slash notation
+\usepackage{mathtools}				% for mathllap
+\usepackage{simplewick}				% Wick Contractions
+\usepackage{bm}						% for bold math
+\usepackage{dsfont}					% for double-lined numbers
+\usepackage{xfrac}					% for \sfrac  giving nice-text fractions
+\usepackage[normalem]{ulem}
+\usepackage{arydshln}				% for \hdashline
+
+
+\usepackage{tikz}					% for drawings
+\usepackage{tikz-3dplot}
+\usetikzlibrary{calc,matrix, shapes,arrows,arrows.meta,bending,decorations.pathmorphing,decorations.markings,decorations.pathreplacing,trees,positioning,external}
+%\tikzset{external/system call={pdflatex \tikzexternalcheckshellescape -halt-on-error -interaction=batchmode -jobname "\image" "\texsource"}} 
+%\tikzexternalize[prefix=gfx/,figure list=true]
+%\tikzexternalize[figure list=true]
+
+
+
+
+
+
+

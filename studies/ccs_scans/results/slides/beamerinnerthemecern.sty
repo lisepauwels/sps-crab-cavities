@@ -1,0 +1,52 @@
+% Jerome Belleman <Jerome.Belleman@cern.ch>, March 2015
+
+\mode<presentation>
+
+\defbeamertemplate*{title page}{cern}
+{
+  \vspace{42pt}
+  \begin{beamercolorbox}[leftskip=\titlelf]{title}
+    \usebeamerfont{title}\inserttitle
+  \end{beamercolorbox}
+  \vspace{2pt}
+  \begin{beamercolorbox}[leftskip=\titlelf]{author}
+    \usebeamerfont{author}\insertauthor
+  \end{beamercolorbox}
+}
+
+\defbeamertemplate*{section page}{cern}{
+  \vfill
+  \begin{beamercolorbox}[leftskip=\titlelf]{section title}
+    \usebeamerfont{section title}\insertsection
+  \end{beamercolorbox}
+  \vfill
+}
+
+%\defbeamertemplate*{itemize item}{fg=red}{%
+ % \raise2pt\hbox{\textbullet}%
+%}
+
+%\defbeamertemplate*{itemize subitem}{cern}{%
+ % \raise2pt\hbox{\textbullet}%
+%}
+
+%\defbeamertemplate*{itemize subsubitem}{cern}{%
+ % \raise2pt\hbox{\textbullet}%
+%}
+
+\setbeamercolor{itemize item}{bg=cern!60!black}
+\setbeamercolor{itemize subitem}{bg=cern!60!black}
+\makeatletter
+\setlength{\leftmargini}{10pt}
+\setbeamertemplate{itemize item}{\raise0.5pt\beamer@usesphere{itemize item}{smallsphere}}
+\setbeamertemplate{itemize subitem}{\raise0.4pt\beamer@usesphere{itemize subitem}{smallsphere}}
+\makeatother
+\setbeamertemplate{sections/subsections in toc}[ball]
+\setbeamertemplate{blocks}[rounded][shadow=true]
+
+
+% text color
+\setbeamercolor{normal text}{fg=cern!60!black}
+
+\mode
+<all>
