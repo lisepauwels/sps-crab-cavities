@@ -42,36 +42,3 @@ prototyping/                       Exploratory notebooks
 └── Debugging_LM/                  Debugging loss maps across Xcoll versions (0.6.8 vs 0.10.1)
 ```
 
-## Running the scans
-
-The scans run on lxplus / HTCondor with EOS. The paths in `submit.sh` are hardcoded
-for user `lpauwels`, so edit them before running the scans under another account.
-
-```bash
-cd studies/ccs_scans
-./submit.sh
-```
-
-`submit.sh` builds a packed Xsuite virtual environment on EOS if one doesn't exist
-yet (`ENVNAME`, currently `xcoll_0.11.4`). It then tars `scripts/` and `data/`,
-expands `example.jobs.yaml` into `jobs.list` (one job per parameter combination)
-and submits with `condor_submit`. Each job writes its output to EOS under
-`studies/<STUDYNAME>/<case>/job_<n>/`.
-
-To combine and plot the results of a case:
-
-```bash
-cd studies/ccs_scans/results
-python postprocess.py <study> <case>   # e.g. crab_cavities_scans betatron_lossmaps
-```
-
-## Not tracked in git
-
-Large simulation outputs from `prototyping/Debugging_LM/` (particle dumps,
-impact tables and monitor files, up to 7 GB each) are excluded via `.gitignore`.
-They exist only locally and can be regenerated with the notebooks.
-
-## Known issues
-
-The plots in `results/plots/` were saved with the wrong collimator gap; see
-`studies/ccs_scans/results/NOTES.md`.
